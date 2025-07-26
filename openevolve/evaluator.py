@@ -272,7 +272,9 @@ class Evaluator:
         logger.error(
             f"All evaluation attempts failed for program{program_id_str}. Last error: {str(last_exception)}"
         )
-        return {"error": 0.0}
+
+        # Return a consistent metric dict so feature dimensions always exist
+        return {"combined_score": 0.0, "rmse": 0.0, "error": 1.0}
 
     def _process_evaluation_result(self, result: Any) -> EvaluationResult:
         """
