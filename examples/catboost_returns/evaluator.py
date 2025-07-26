@@ -31,6 +31,7 @@ def evaluate(program_path: str) -> EvaluationResult:
         result = program.train_model(horizon=horizon)
         rmse = float(result.get("rmse", 0.0)) if isinstance(result, dict) else float(result)
     except Exception as e:
+        print(f"Error running program: {e}")
         return EvaluationResult(metrics={"combined_score": 0.0, "rmse": 0.0, "error": 1.0})
 
     combined_score = 1.0 / (1.0 + rmse)

@@ -5,12 +5,12 @@ checkpoint_interval: 10
 log_level: "INFO"
 
 llm:
-  primary_model: "gpt-4o-mini"
+  primary_model: "o4-mini"
   primary_model_weight: 1.0
   api_base: "https://api.openai.com/v1"
-  temperature: 0.7
+  temperature: 0.5
   top_p: 0.95
-  max_tokens: 4096
+  max_tokens: 16384
 
 database:
   population_size: 20
@@ -21,7 +21,7 @@ database:
   feature_dimensions: ["combined_score", "complexity"]
 
 evaluator:
-  timeout: 60
+  timeout: 10
   cascade_evaluation: false
   parallel_evaluations: 1
   use_llm_feedback: false
@@ -30,7 +30,7 @@ prompt:
   system_message: |
     You are an expert machine learning engineer. Improve the CatBoost training
     code inside the EVOLVE-BLOCK to minimize validation RMSE for Bitcoin return
-    forecasting over the specified horizon.
+    forecasting over the specified horizon. In the final response always provide only code! No comments or anything else — just the code.”
   num_top_programs: 3
   use_template_stochasticity: true
 

@@ -1,3 +1,7 @@
 pandas
 numpy
 catboost
+scikit-learn
+pandas_ta
+TA-Lib
+

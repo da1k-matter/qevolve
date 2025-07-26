@@ -177,6 +177,7 @@ def _run_iteration_worker(
         if _worker_config.diff_based_evolution:
             from openevolve.utils.code_utils import extract_diffs, apply_diff, format_diff_summary
             
+            print("LLM response:", llm_response)
             diff_blocks = extract_diffs(llm_response)
             if not diff_blocks:
                 return SerializableResult(

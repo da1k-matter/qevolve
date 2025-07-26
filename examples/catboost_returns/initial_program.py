@@ -5,14 +5,15 @@ CatBoost model for Bitcoin return prediction.
 This program loads BTC_30.csv and trains a CatBoostRegressor to predict
 future returns. The horizon parameter controls how many bars ahead the
 model forecasts returns.
+The function now also returns a `combined_score` (negative RMSE) so that OpenEvolve has the feature dimension it expects.
 """
 import pandas as pd
 import numpy as np
-from catboost import CatBoostRegressor
+from catboost import CatBoostRegressor as CatBoostRegressor
 
 
 def train_model(
-    horizon: int = 1,
+    horizon: int = 20,
     test_fraction: float = 0.2,
     iterations: int = 200,
     depth: int = 6,
@@ -35,14 +36,21 @@ def train_model(
         depth=depth,
         learning_rate=learning_rate,
         loss_function="RMSE",
-        verbose=False,
+        verbose=True,
         random_seed=42,
     )
-    model.fit(X_train, y_train, eval_set=(X_valid, y_valid), verbose=False)
+    model.fit(X_train, y_train, eval_set=(X_valid, y_valid), verbose=True)
 
     preds = model.predict(X_valid)
     rmse = float(np.sqrt(np.mean((preds - y_valid) ** 2)))
-    return {"rmse": rmse}
+    # Higher score should correspond to better (lower) RMSE.
+    combined_score = -rmse
+
+    return {
+        "rmse": rmse,
+        "combined_score": combined_score,
+        "error": 0.0,  # zero indicates a successful run
+    }
 
 # EVOLVE-BLOCK-END
 
