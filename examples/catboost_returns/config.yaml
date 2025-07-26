@@ -1,6 +1,6 @@
 # Configuration for CatBoost return prediction example
-horizon: 10
-max_iterations: 50
+horizon: 20
+max_iterations: 5000
 checkpoint_interval: 10
 log_level: "INFO"
 
@@ -8,30 +8,41 @@ llm:
   primary_model: "o4-mini"
   primary_model_weight: 1.0
   api_base: "https://api.openai.com/v1"
-  temperature: 0.5
+
+  temperature: 0.7
   top_p: 0.95
   max_tokens: 16384
 
 database:
-  population_size: 20
-  archive_size: 5
-  num_islands: 2
+  population_size: 100
+  archive_size: 10
+  num_islands: 5
+  migration_interval: 50
+  migration_rate: 0.1
   elite_selection_ratio: 0.2
   exploitation_ratio: 0.7
-  feature_dimensions: ["combined_score", "complexity"]
+  feature_dimensions:                 # Dimensions for MAP-Elites feature map
+    - "complexity"                    # Code length (built-in)
+    - "diversity"                     # Code diversity (built-in)
+    - "combined_score"                # Code quality (built-in)
 
 evaluator:
-  timeout: 10
+  timeout: 100
   cascade_evaluation: false
-  parallel_evaluations: 1
+  parallel_evaluations: 3
   use_llm_feedback: false
+  llm_feedback_weight: 0.1            # Weight for LLM feedback in final score
+
 
 prompt:
   system_message: |
     You are an expert machine learning engineer. Improve the CatBoost training
-    code inside the EVOLVE-BLOCK to minimize validation RMSE for Bitcoin return
-    forecasting over the specified horizon. In the final response always provide only code! No comments or anything else — just the code.”
+    code inside the EVOLVE-BLOCK to maximize validation accuracy for Bitcoin  
+    forecasting over the specified horizon
   num_top_programs: 3
   use_template_stochasticity: true
 
+# Evolution settings
 diff_based_evolution: true
+allow_full_rewrites: true
+diversity_threshold: 0.1

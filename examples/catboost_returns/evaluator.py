@@ -25,14 +25,13 @@ def evaluate(program_path: str) -> EvaluationResult:
     spec.loader.exec_module(program)
 
     if not hasattr(program, "train_model"):
-        return EvaluationResult(metrics={"combined_score": 0.0, "rmse": 0.0})
+        return EvaluationResult(metrics={"combined_score": 0.0, "error": 1})
 
     try:
         result = program.train_model(horizon=horizon)
-        rmse = float(result.get("rmse", 0.0)) if isinstance(result, dict) else float(result)
+        score = float(result.get("combined_score", 0.0)) if isinstance(result, dict) else float(result)
     except Exception as e:
         print(f"Error running program: {e}")
-        return EvaluationResult(metrics={"combined_score": 0.0, "rmse": 0.0, "error": 1.0})
+        return EvaluationResult(metrics={"combined_score": 0.0, "error": 1})
 
-    combined_score = 1.0 / (1.0 + rmse)
-    return EvaluationResult(metrics={"combined_score": combined_score, "rmse": rmse})
+    return EvaluationResult(metrics={"combined_score": score, "error": 0})

@@ -2,14 +2,17 @@
 """
 CatBoost model for Bitcoin return prediction.
 
-This program loads BTC_30.csv and trains a CatBoostRegressor to predict
-future returns. The horizon parameter controls how many bars ahead the
-model forecasts returns.
-The function now also returns a `combined_score` (negative RMSE) so that OpenEvolve has the feature dimension it expects.
+This program loads BTC_30.csv and trains a CatBoostClassifier 
+The function now also returns a `combined_score` so that OpenEvolve has the feature dimension it expects.
 """
 import pandas as pd
 import numpy as np
-from catboost import CatBoostRegressor as CatBoostRegressor
+from catboost import CatBoostClassifier
+from sklearn.preprocessing import RobustScaler
+from sklearn.metrics import accuracy_score
+
+
+# You can use TA-lib
 
 
 def train_model(
@@ -19,40 +22,48 @@ def train_model(
     depth: int = 6,
     learning_rate: float = 0.1,
 ):
-    """Train CatBoost on BTC_30.csv and return validation RMSE."""
-    df = pd.read_csv("BTC_30.csv")
-    df["return"] = df["close"].pct_change().shift(-horizon)
-    df = df.dropna().reset_index(drop=True)
+    try:
+        df = pd.read_csv("BTC_30.csv", parse_dates=["timestamp"])
+        df["return"] = df["close"].pct_change().shift(-horizon)
+        df["label"] = (df["return"] > 0).astype(int)
+        df = df.dropna().reset_index(drop=True)
 
-    features = df[["open", "high", "low", "close", "volume"]]
-    target = df["return"]
+        features = df[["open", "high", "low", "close", "volume"]]
+        target = df["label"]
 
-    split_idx = int(len(df) * (1 - test_fraction))
-    X_train, X_valid = features.iloc[:split_idx], features.iloc[split_idx:]
-    y_train, y_valid = target.iloc[:split_idx], target.iloc[split_idx:]
+        split_idx = int(len(df) * (1 - test_fraction))
+        X_train, X_valid = features.iloc[:split_idx], features.iloc[split_idx:]
+        y_train, y_valid = target.iloc[:split_idx], target.iloc[split_idx:]
 
-    model = CatBoostRegressor(
-        iterations=iterations,
-        depth=depth,
-        learning_rate=learning_rate,
-        loss_function="RMSE",
-        verbose=True,
-        random_seed=42,
-    )
-    model.fit(X_train, y_train, eval_set=(X_valid, y_valid), verbose=True)
+        scaler = RobustScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_valid = scaler.transform(X_valid)
 
-    preds = model.predict(X_valid)
-    rmse = float(np.sqrt(np.mean((preds - y_valid) ** 2)))
-    # Higher score should correspond to better (lower) RMSE.
-    combined_score = -rmse
+        model = CatBoostClassifier(
+            iterations=iterations,
+            depth=depth,
+            learning_rate=learning_rate,
+            verbose=True,
+            random_seed=42,
+        )
+        model.fit(X_train, y_train, eval_set=(X_valid, y_valid), verbose=True)
+
+        # EVOLVE-BLOCK-END
+
+        preds = model.predict(X_valid)
+        acc = accuracy_score(y_valid, preds)
+    except Exception as e:
+        print(f"Error running program: {e}")
+        return {
+            "combined_score": 0.0,
+            "error": 1,
+        }
 
     return {
-        "rmse": rmse,
-        "combined_score": combined_score,
-        "error": 0.0,  # zero indicates a successful run
+        "combined_score": acc,
+        "error": 0,
     }
 
-# EVOLVE-BLOCK-END
 
 if __name__ == "__main__":
     metrics = train_model()
