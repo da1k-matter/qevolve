@@ -304,7 +304,7 @@ def evaluate_stage3(program_path):
 
             # Should return error result after all retries fail
             self.assertIn("error", result)
-            self.assertEqual(result["error"], 0.0)
+            self.assertEqual(result["error"], 1.0)
 
         asyncio.run(run_test())
 

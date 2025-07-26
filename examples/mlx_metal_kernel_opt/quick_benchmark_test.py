@@ -4,6 +4,10 @@ Quick Benchmark Test - Test the benchmark suite with a few key scenarios
 
 import os
 import sys
+import pytest
+
+# Skip the test if MLX is not installed
+pytest.importorskip("mlx.core")
 
 # Add current directory to path for local imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
